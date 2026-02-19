@@ -1,147 +1,565 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>My First Site</title>
+  <title>Code DOOM: Procedural Nightmare</title>
   <style>
+    :root {
+      color-scheme: dark;
+    }
+    * { box-sizing: border-box; }
     body {
       margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #111;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      height: 100vh;
+      background: radial-gradient(circle at center, #101218, #06070b 65%);
+      color: #e6edf9;
+      font-family: Inter, Segoe UI, system-ui, sans-serif;
       overflow: hidden;
     }
-
-    header {
-      width: 100%;
+    #hud {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+    }
+    .topbar {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      padding: 1rem 2rem;
-      background-color: #000;
-      box-shadow: 0 0 10px rgba(255,255,255,0.1);
+      padding: 12px 16px;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #9fb4d9;
+      text-shadow: 0 0 8px rgba(0, 0, 0, 0.85);
     }
-
-    .logo {
-      font-weight: bold;
-      font-size: 1.2rem;
-      cursor: pointer;
-      transition: transform 0.3s ease;
-    }
-
-    .logo:hover {
-      transform: scale(1.1);
-    }
-
-    nav a {
-      margin-left: 20px;
-      color: #fff;
-      text-decoration: none;
-      position: relative;
-      transition: color 0.3s;
-    }
-
-    nav a::after {
-      content: '';
-      position: absolute;
-      width: 0;
-      height: 2px;
-      bottom: -3px;
-      left: 0;
-      background-color: white;
-      transition: width 0.3s;
-    }
-
-    nav a:hover {
-      color: #ccc;
-    }
-
-    nav a:hover::after {
-      width: 100%;
-    }
-
-    .main {
-      flex-grow: 1;
+    .center {
       display: flex;
-      flex-direction: column;
       justify-content: center;
       align-items: center;
+    }
+    .crosshair {
+      width: 28px;
+      height: 28px;
+      position: relative;
+      opacity: 0.85;
+      filter: drop-shadow(0 0 6px rgba(255, 60, 20, 0.6));
+    }
+    .crosshair::before,
+    .crosshair::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      background: #ff8a62;
+    }
+    .crosshair::before { width: 2px; height: 22px; }
+    .crosshair::after { width: 22px; height: 2px; }
+    .bottombar {
+      display: flex;
+      justify-content: center;
+      padding: 14px;
+    }
+    .panel {
+      background: linear-gradient(180deg, rgba(18, 24, 37, 0.76), rgba(7, 8, 13, 0.92));
+      border: 1px solid rgba(112, 145, 195, 0.35);
+      border-radius: 12px;
+      box-shadow: 0 14px 45px rgba(0, 0, 0, 0.4), inset 0 0 18px rgba(180, 220, 255, 0.06);
+      backdrop-filter: blur(4px);
+      padding: 10px 16px;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      font-size: 13px;
+    }
+    .metric b { color: #cce0ff; }
+    #start-overlay {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background:
+        linear-gradient(180deg, rgba(3, 4, 7, 0.86), rgba(2, 2, 3, 0.95)),
+        radial-gradient(circle at center, rgba(255, 120, 80, 0.15), transparent 55%);
       text-align: center;
+      padding: 20px;
+      z-index: 10;
     }
-
-    .main h1 {
-      font-size: 3rem;
-      margin-bottom: 1rem;
+    .intro {
+      width: min(760px, 90vw);
+      border: 1px solid rgba(255, 145, 110, 0.45);
+      border-radius: 16px;
+      padding: 22px;
+      background: linear-gradient(160deg, rgba(15, 11, 14, 0.9), rgba(11, 13, 18, 0.96));
+      box-shadow: 0 25px 65px rgba(0, 0, 0, 0.55);
     }
-
-    .btn {
-      margin-top: 2rem;
-      padding: 0.75rem 2rem;
-      background-color: #fff;
-      color: #000;
+    h1 { margin: 0 0 10px; font-size: clamp(24px, 4vw, 42px); }
+    p { color: #c7cbd8; line-height: 1.45; }
+    .controls { display: grid; grid-template-columns: repeat(2, minmax(180px, 1fr)); gap: 10px; text-align: left; margin: 14px 0; }
+    button {
+      pointer-events: auto;
       border: none;
+      border-radius: 9px;
+      padding: 12px 18px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
       cursor: pointer;
-      font-weight: bold;
-      transition: transform 0.3s, background-color 0.3s;
+      color: #190b07;
+      background: linear-gradient(180deg, #ff986a, #ff6838);
     }
-
-    .btn:hover {
-      transform: scale(1.05);
-      background-color: #ccc;
-    }
-
-    #video-container {
-      display: none;
-      margin-top: 2rem;
-    }
-
-    video {
-      width: 80vw;
-      max-width: 800px;
-      border: 3px solid white;
-    }
+    canvas { display: block; width: 100vw; height: 100vh; }
   </style>
 </head>
 <body>
-  <header>
-    <div class="logo" onclick="scrollToTop()">Home</div>
-    <nav>
-      <a href="https://t.me/FannerrXC" target="_blank">Support</a>
-      <a href="#" onclick="showAbout()">About</a>
-    </nav>
-  </header>
+  <canvas id="game"></canvas>
 
-  <div class="main">
-    <h1>Welcome to My First Website</h1>
-    <button class="btn" onclick="playVideo()">Get Started</button>
-    <div id="video-container">
-      <video id="intro-video" controls>
-        <source src="video.mp4" type="video/mp4" />
-        Your browser does not support the video tag.
-      </video>
+  <div id="hud">
+    <div class="topbar">
+      <div>Code DOOM // Procedural Build</div>
+      <div id="enemy-state">Цель: активна</div>
+    </div>
+    <div class="center"><div class="crosshair"></div></div>
+    <div class="bottombar">
+      <div class="panel">
+        <span class="metric"><b>WASD</b> движение</span>
+        <span class="metric"><b>Мышь</b> обзор</span>
+        <span class="metric"><b>ЛКМ</b> выстрел</span>
+        <span class="metric"><b id="fps">FPS: --</b></span>
+      </div>
+    </div>
+  </div>
+
+  <div id="start-overlay">
+    <div class="intro">
+      <h1>DOOM-стиль рендер полностью кодом</h1>
+      <p>Мини-игра на canvas с рейкастингом, процедурными текстурами стен/пола/оружия и динамическим светом. Нажми старт и кликни по экрану, чтобы захватить курсор.</p>
+      <div class="controls">
+        <span>W / S — вперед / назад</span>
+        <span>A / D — шаг влево / вправо</span>
+        <span>Мышь — поворот камеры</span>
+        <span>ЛКМ — выстрел</span>
+      </div>
+      <button id="start-btn">Запустить</button>
     </div>
   </div>
 
   <script>
-    function playVideo() {
-      const videoContainer = document.getElementById("video-container");
-      const video = document.getElementById("intro-video");
-      videoContainer.style.display = "block";
-      video.play();
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d', { alpha: false });
+    const fpsEl = document.getElementById('fps');
+    const enemyStateEl = document.getElementById('enemy-state');
+    const overlay = document.getElementById('start-overlay');
+    const startBtn = document.getElementById('start-btn');
+
+    const worldMap = [
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,1],
+      [1,0,1,1,0,0,1,1,0,2,2,0,1,1,0,0,0,1],
+      [1,0,1,1,0,0,1,1,0,0,0,0,1,1,0,3,0,1],
+      [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,0,1],
+      [1,0,0,2,2,2,0,0,0,1,1,1,0,0,0,3,0,1],
+      [1,0,0,2,0,2,0,0,0,1,0,1,0,0,0,0,0,1],
+      [1,0,0,2,2,2,0,0,0,1,0,1,0,0,1,1,0,1],
+      [1,0,0,0,0,0,0,3,0,1,0,1,0,0,1,1,0,1],
+      [1,0,0,0,0,0,0,3,0,1,0,0,0,0,0,0,0,1],
+      [1,0,0,1,1,0,0,3,0,1,1,1,0,1,1,0,0,1],
+      [1,0,0,1,1,0,0,0,0,0,0,0,0,1,1,0,0,1],
+      [1,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,1],
+      [1,0,0,0,0,0,1,1,0,2,2,0,1,1,0,0,0,1],
+      [1,0,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,1],
+      [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+      [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    ];
+
+    const player = {
+      x: 3.5,
+      y: 3.5,
+      dir: 0,
+      fov: Math.PI / 3,
+      speed: 4.2,
+      strafeSpeed: 3.5,
+      turnSpeed: 2.2
+    };
+
+    const enemy = {
+      x: 14.5,
+      y: 4.5,
+      alive: true,
+      wobble: 0
+    };
+
+    const keys = {};
+    const zBuffer = [];
+    let shooting = 0;
+    let lastTime = 0;
+    let fpsClock = 0;
+    let fpsFrames = 0;
+
+    function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+    function noise(x, y) {
+      const n = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
+      return n - Math.floor(n);
     }
 
-    function scrollToTop() {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    function fbm(x, y, octaves = 4) {
+      let v = 0;
+      let amp = 0.5;
+      let freq = 1;
+      for (let i = 0; i < octaves; i++) {
+        v += amp * noise(x * freq, y * freq);
+        freq *= 2;
+        amp *= 0.5;
+      }
+      return v;
     }
 
-    function showAbout() {
-      alert("This website is a minimalist landing page created as your first web project. It features animations, dark theme, and a simple video introduction.");
+    function wallTexture(type, u, v) {
+      const crack = fbm(u * 8, v * 8, 3);
+      const soot = fbm(u * 17 + type * 2.3, v * 17, 4);
+      if (type === 1) {
+        const brick = ((Math.floor(v * 8) % 2) * 0.5 + Math.floor(u * 6)) % 1;
+        const mortar = (u * 6) % 1 < 0.05 || (v * 8) % 1 < 0.05;
+        const base = 70 + crack * 65;
+        return mortar
+          ? [50, 50, 56]
+          : [base + 70 * brick, base * 0.58, base * 0.45];
+      }
+      if (type === 2) {
+        const stripes = Math.sin((u + v * 0.5) * 32) * 0.5 + 0.5;
+        const base = 50 + crack * 40;
+        return [base * 0.8, base + stripes * 80, base + stripes * 95];
+      }
+      const panel = (Math.floor(u * 5) + Math.floor(v * 5)) % 2;
+      const glow = Math.sin(v * 35 + u * 8) * 0.5 + 0.5;
+      const base = 48 + soot * 30;
+      return panel
+        ? [base + glow * 60, base + glow * 14, base + 10]
+        : [base + 15, base + 5, base + glow * 70];
     }
+
+    function floorTexture(x, y) {
+      const tile = (Math.floor(x) + Math.floor(y)) % 2;
+      const grain = fbm(x * 1.8, y * 1.8, 4);
+      const value = 28 + grain * 45 + tile * 8;
+      return [value * 0.9, value, value * 1.2];
+    }
+
+    function ceilingTexture(x, y) {
+      const rust = fbm(x * 2.3, y * 2.3, 3);
+      const pipes = Math.sin(y * 10) * 0.5 + 0.5;
+      const v = 25 + rust * 32 + pipes * 18;
+      return [v * 0.8, v * 0.8, v];
+    }
+
+    function weaponTexture(x, y, flash) {
+      const contour = 1 - Math.hypot((x - 0.5) / 0.55, (y - 0.67) / 0.43);
+      const steel = fbm(x * 24, y * 24, 3);
+      const body = clamp(contour * 1.5, 0, 1);
+      const c = 42 + steel * 88;
+      const fx = flash * 220 * Math.exp(-((x - 0.5) ** 2 + (y - 0.3) ** 2) * 30);
+      return [
+        clamp(c * body + fx, 0, 255),
+        clamp((c * 0.95 + 8) * body + fx * 0.75, 0, 255),
+        clamp((c * 1.1 + 16) * body + fx * 0.35, 0, 255),
+        body
+      ];
+    }
+
+    function enemyTexture(u, v) {
+      const cx = u - 0.5;
+      const cy = v - 0.52;
+      const body = Math.exp(-(cx * cx * 7 + cy * cy * 3.4));
+      const eye = Math.exp(-((u - 0.35) ** 2 + (v - 0.42) ** 2) * 500) + Math.exp(-((u - 0.65) ** 2 + (v - 0.42) ** 2) * 500);
+      const veins = fbm(u * 17, v * 17, 3);
+      const r = 100 + body * 120 + eye * 130;
+      const g = 35 + body * 40 + veins * 22;
+      const b = 30 + body * 35;
+      const alpha = clamp(body * 1.15, 0, 1);
+      return [r, g, b, alpha];
+    }
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    function castRay(rayDirX, rayDirY) {
+      let mapX = Math.floor(player.x);
+      let mapY = Math.floor(player.y);
+      const deltaDistX = Math.abs(1 / (rayDirX || 0.0001));
+      const deltaDistY = Math.abs(1 / (rayDirY || 0.0001));
+      let stepX, stepY, sideDistX, sideDistY;
+
+      if (rayDirX < 0) {
+        stepX = -1;
+        sideDistX = (player.x - mapX) * deltaDistX;
+      } else {
+        stepX = 1;
+        sideDistX = (mapX + 1 - player.x) * deltaDistX;
+      }
+      if (rayDirY < 0) {
+        stepY = -1;
+        sideDistY = (player.y - mapY) * deltaDistY;
+      } else {
+        stepY = 1;
+        sideDistY = (mapY + 1 - player.y) * deltaDistY;
+      }
+
+      let hitType = 0;
+      let side = 0;
+      for (let i = 0; i < 64; i++) {
+        if (sideDistX < sideDistY) {
+          sideDistX += deltaDistX;
+          mapX += stepX;
+          side = 0;
+        } else {
+          sideDistY += deltaDistY;
+          mapY += stepY;
+          side = 1;
+        }
+        hitType = worldMap[mapY]?.[mapX] || 1;
+        if (hitType > 0) break;
+      }
+
+      const perpDist = side === 0
+        ? (mapX - player.x + (1 - stepX) / 2) / (rayDirX || 0.0001)
+        : (mapY - player.y + (1 - stepY) / 2) / (rayDirY || 0.0001);
+      const hitX = player.x + perpDist * rayDirX;
+      const hitY = player.y + perpDist * rayDirY;
+      const wallX = side === 0 ? hitY - Math.floor(hitY) : hitX - Math.floor(hitX);
+
+      return { perpDist: Math.max(0.01, perpDist), side, wallX, hitType };
+    }
+
+    function update(dt) {
+      const forwardX = Math.cos(player.dir);
+      const forwardY = Math.sin(player.dir);
+      const rightX = Math.cos(player.dir + Math.PI / 2);
+      const rightY = Math.sin(player.dir + Math.PI / 2);
+
+      let moveX = 0;
+      let moveY = 0;
+
+      if (keys['KeyW']) { moveX += forwardX; moveY += forwardY; }
+      if (keys['KeyS']) { moveX -= forwardX; moveY -= forwardY; }
+      if (keys['KeyA']) { moveX -= rightX; moveY -= rightY; }
+      if (keys['KeyD']) { moveX += rightX; moveY += rightY; }
+      if (keys['ArrowLeft']) player.dir -= player.turnSpeed * dt;
+      if (keys['ArrowRight']) player.dir += player.turnSpeed * dt;
+
+      const moveLen = Math.hypot(moveX, moveY) || 1;
+      const speed = (keys['KeyA'] || keys['KeyD']) && !(keys['KeyW'] || keys['KeyS']) ? player.strafeSpeed : player.speed;
+      const nextX = player.x + (moveX / moveLen) * speed * dt;
+      const nextY = player.y + (moveY / moveLen) * speed * dt;
+
+      if ((worldMap[Math.floor(player.y)]?.[Math.floor(nextX)] || 1) === 0) player.x = nextX;
+      if ((worldMap[Math.floor(nextY)]?.[Math.floor(player.x)] || 1) === 0) player.y = nextY;
+
+      enemy.wobble += dt * 4;
+      shooting = Math.max(0, shooting - dt * 7);
+    }
+
+    function shoot() {
+      shooting = 1;
+      if (!enemy.alive) return;
+      const dx = enemy.x - player.x;
+      const dy = enemy.y - player.y;
+      const dist = Math.hypot(dx, dy);
+      const targetAngle = Math.atan2(dy, dx);
+      let diff = Math.abs(targetAngle - player.dir);
+      if (diff > Math.PI) diff = Math.abs(diff - Math.PI * 2);
+      if (diff < 0.08 && dist < 20) {
+        let blocked = false;
+        const steps = Math.floor(dist * 14);
+        for (let i = 1; i < steps; i++) {
+          const t = i / steps;
+          const sx = player.x + dx * t;
+          const sy = player.y + dy * t;
+          if ((worldMap[Math.floor(sy)]?.[Math.floor(sx)] || 1) > 0) {
+            blocked = true;
+            break;
+          }
+        }
+        if (!blocked) {
+          enemy.alive = false;
+          enemyStateEl.textContent = 'Цель: уничтожена';
+        }
+      }
+    }
+
+    function drawFloorAndCeiling() {
+      const w = canvas.width;
+      const h = canvas.height;
+      const half = h * 0.5;
+      const dirX = Math.cos(player.dir);
+      const dirY = Math.sin(player.dir);
+      const planeX = -dirY * Math.tan(player.fov / 2);
+      const planeY = dirX * Math.tan(player.fov / 2);
+
+      for (let y = 0; y < h; y++) {
+        const isFloor = y >= half;
+        const p = isFloor ? y - half : half - y;
+        const rowDist = half / Math.max(1, p);
+        const stepX = rowDist * (2 * planeX) / w;
+        const stepY = rowDist * (2 * planeY) / w;
+
+        let floorX = player.x + rowDist * (dirX - planeX);
+        let floorY = player.y + rowDist * (dirY - planeY);
+
+        for (let x = 0; x < w; x++) {
+          const tex = isFloor ? floorTexture(floorX, floorY) : ceilingTexture(floorX, floorY);
+          const fog = clamp(1 - rowDist / 11, 0.13, 1);
+          ctx.fillStyle = `rgb(${tex[0] * fog}, ${tex[1] * fog}, ${tex[2] * fog})`;
+          ctx.fillRect(x, y, 1, 1);
+          floorX += stepX;
+          floorY += stepY;
+        }
+      }
+    }
+
+    function drawWalls() {
+      const w = canvas.width;
+      const h = canvas.height;
+      const dirX = Math.cos(player.dir);
+      const dirY = Math.sin(player.dir);
+      const planeX = -dirY * Math.tan(player.fov / 2);
+      const planeY = dirX * Math.tan(player.fov / 2);
+
+      for (let x = 0; x < w; x++) {
+        const cameraX = (2 * x / w) - 1;
+        const rayDirX = dirX + planeX * cameraX;
+        const rayDirY = dirY + planeY * cameraX;
+
+        const ray = castRay(rayDirX, rayDirY);
+        zBuffer[x] = ray.perpDist;
+
+        const lineHeight = Math.floor(h / ray.perpDist);
+        const drawStart = Math.max(0, Math.floor(-lineHeight / 2 + h / 2));
+        const drawEnd = Math.min(h - 1, Math.floor(lineHeight / 2 + h / 2));
+
+        for (let y = drawStart; y <= drawEnd; y++) {
+          const v = (y - drawStart) / Math.max(1, drawEnd - drawStart);
+          const tex = wallTexture(ray.hitType, ray.wallX, v);
+          const sideLight = ray.side ? 0.72 : 1;
+          const fog = clamp(1 - ray.perpDist / 14, 0.16, 1);
+          const r = tex[0] * sideLight * fog;
+          const g = tex[1] * sideLight * fog;
+          const b = tex[2] * sideLight * fog;
+          ctx.fillStyle = `rgb(${r},${g},${b})`;
+          ctx.fillRect(x, y, 1, 1);
+        }
+      }
+    }
+
+    function drawEnemy() {
+      if (!enemy.alive) return;
+      const dx = enemy.x - player.x;
+      const dy = enemy.y - player.y;
+      const invDet = 1 / (Math.cos(player.dir) * Math.sin(player.dir + Math.PI / 2) - Math.sin(player.dir) * Math.cos(player.dir + Math.PI / 2));
+      const transformX = invDet * (Math.sin(player.dir + Math.PI / 2) * dx - Math.cos(player.dir + Math.PI / 2) * dy);
+      const transformY = invDet * (-Math.sin(player.dir) * dx + Math.cos(player.dir) * dy);
+      if (transformY <= 0.1) return;
+
+      const w = canvas.width;
+      const h = canvas.height;
+      const spriteScreenX = Math.floor((w / 2) * (1 + transformX / transformY));
+      const bob = Math.sin(enemy.wobble) * 0.08;
+      const spriteHeight = Math.abs(Math.floor(h / transformY * (1 + bob)));
+      const spriteWidth = spriteHeight;
+      const drawStartY = Math.max(0, Math.floor(h / 2 - spriteHeight / 2));
+      const drawEndY = Math.min(h - 1, Math.floor(h / 2 + spriteHeight / 2));
+      const drawStartX = Math.max(0, Math.floor(spriteScreenX - spriteWidth / 2));
+      const drawEndX = Math.min(w - 1, Math.floor(spriteScreenX + spriteWidth / 2));
+
+      for (let stripe = drawStartX; stripe < drawEndX; stripe++) {
+        if (transformY > zBuffer[stripe]) continue;
+        const u = (stripe - (spriteScreenX - spriteWidth / 2)) / Math.max(1, spriteWidth);
+        for (let y = drawStartY; y < drawEndY; y++) {
+          const v = (y - drawStartY) / Math.max(1, spriteHeight);
+          const tex = enemyTexture(u, v);
+          if (tex[3] < 0.1) continue;
+          const fog = clamp(1 - transformY / 14, 0.2, 1);
+          ctx.fillStyle = `rgba(${tex[0] * fog}, ${tex[1] * fog}, ${tex[2] * fog}, ${tex[3]})`;
+          ctx.fillRect(stripe, y, 1, 1);
+        }
+      }
+    }
+
+    function drawWeapon(time) {
+      const w = canvas.width;
+      const h = canvas.height;
+      const gunW = Math.floor(w * 0.34);
+      const gunH = Math.floor(h * 0.35);
+      const bobX = Math.sin(time * 0.006) * 12;
+      const bobY = Math.abs(Math.sin(time * 0.008)) * 8;
+      const offsetX = Math.floor(w / 2 - gunW / 2 + bobX);
+      const offsetY = Math.floor(h - gunH + 24 + bobY);
+      const flash = shooting;
+
+      for (let y = 0; y < gunH; y++) {
+        for (let x = 0; x < gunW; x++) {
+          const tex = weaponTexture(x / gunW, y / gunH, flash);
+          if (tex[3] < 0.04) continue;
+          ctx.fillStyle = `rgba(${tex[0]}, ${tex[1]}, ${tex[2]}, ${tex[3]})`;
+          ctx.fillRect(offsetX + x, offsetY + y, 1, 1);
+        }
+      }
+
+      if (flash > 0.03) {
+        const grad = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, h * 0.7);
+        grad.addColorStop(0, `rgba(255,180,120,${flash * 0.18})`);
+        grad.addColorStop(1, 'rgba(255,120,40,0)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, w, h);
+      }
+    }
+
+    function frame(now) {
+      const dt = Math.min(0.033, (now - lastTime) / 1000 || 0.016);
+      lastTime = now;
+      update(dt);
+
+      drawFloorAndCeiling();
+      drawWalls();
+      drawEnemy();
+      drawWeapon(now);
+
+      fpsClock += dt;
+      fpsFrames += 1;
+      if (fpsClock > 0.35) {
+        fpsEl.textContent = `FPS: ${Math.round(fpsFrames / fpsClock)}`;
+        fpsClock = 0;
+        fpsFrames = 0;
+      }
+
+      requestAnimationFrame(frame);
+    }
+
+    window.addEventListener('resize', resize);
+    window.addEventListener('keydown', (e) => keys[e.code] = true);
+    window.addEventListener('keyup', (e) => keys[e.code] = false);
+    window.addEventListener('mousemove', (e) => {
+      if (document.pointerLockElement !== canvas) return;
+      player.dir += e.movementX * 0.0025;
+    });
+    canvas.addEventListener('mousedown', () => {
+      if (document.pointerLockElement !== canvas) {
+        canvas.requestPointerLock();
+      } else {
+        shoot();
+      }
+    });
+
+    startBtn.addEventListener('click', () => {
+      overlay.style.display = 'none';
+      canvas.requestPointerLock();
+    });
+
+    resize();
+    requestAnimationFrame(frame);
   </script>
 </body>
 </html>
